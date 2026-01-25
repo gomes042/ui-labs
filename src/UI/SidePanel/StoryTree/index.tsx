@@ -61,7 +61,11 @@ function StoryTree(props: StoryTreeProps) {
 				Position={UDim2.fromScale(0.5, 0.5)}
 				Size={new UDim2(1, 6, 1, 0)}
 			>
-				<TopList HorizontalAlignment={Enum.HorizontalAlignment.Center} Padding={new UDim(0, 1)} />
+				<TopList
+					SortOrder={Enum.SortOrder.Name}
+					HorizontalAlignment={Enum.HorizontalAlignment.Center}
+					Padding={new UDim(0, 1)}
+				/>
 				{nodeList}
 			</scrollingframe>
 		</Detector>

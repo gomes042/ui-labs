@@ -70,7 +70,7 @@ function FusionLib(props: MounterProps<"FusionLib">) {
 				return value;
 			} else {
 				if (version === "Fusion3") {
-					const hydrateScope = [] as unknown as Fusion3;
+					const hydrateScope = Cast<Fusion3>(GetScopedFusion(Cast<Fusion3>(result.fusion), []));
 					hydrateScope.Hydrate(props.MountFrame)({
 						[fusion.Children]: value
 					});
