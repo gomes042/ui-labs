@@ -1,6 +1,9 @@
-import { ScriptEditorService } from "@rbxts/services";
+import { ReplicatedStorage, ScriptEditorService } from "@rbxts/services";
 
 import type { Environment } from "./Environment";
+
+let gameRuntimeTS: ModuleScript | undefined;
+let runtimeLibModule: ModuleScript | undefined;
 
 /**
  * Replaces the environment of a loadstring'ed function
@@ -35,6 +38,10 @@ export function SetEnvironment(virtualModule: Callback, module: ModuleScript, en
 			if (resolved === undefined) {
 				error(`Could not resolve require ${dependency} in ${module}`, 2);
 			}
+			
+			if (runtimeLibModule !== undefined && resolved === runtimeLibModule) {
+				return gameRuntimeTS;
+			}
 
 			return environment.LoadDependency(resolved).expect();
 		},
@@ -51,6 +58,19 @@ export function SetEnvironment(virtualModule: Callback, module: ModuleScript, en
 	setfenv(virtualModule, newEnvironment);
 }
 
+export function InjectRbxtsRuntime(module: ModuleScript, environment: Environment) {
+	const rbxtsInclude = ReplicatedStorage.FindFirstChild("rbxts_include") as Folder | undefined;
+	if (rbxtsInclude === undefined) return;
+
+	runtimeLibModule = rbxtsInclude.FindFirstChild("RuntimeLib") as ModuleScript | undefined;
+	if (runtimeLibModule === undefined) return;
+
+	gameRuntimeTS = require(runtimeLibModule) as ModuleScript;
+
+	// Give the story the game's TS runtime
+	(environment.Shared as Record<never, unknown>)[module as never] = gameRuntimeTS as never;
+}
+
 /**
  * Requires a module by using loadstring, this also replaces the _G table and the function "require()"
  * @param module the module to laod
@@ -64,6 +84,7 @@ export async function LoadVirtualModule(module: ModuleScript, environment: Envir
 	}
 
 	SetEnvironment(virtualModule, module, environment);
+	InjectRbxtsRuntime(module, environment);
 
 	const [sucess, result] = pcall(virtualModule);
 	if (sucess) {
